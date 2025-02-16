@@ -1,33 +1,13 @@
+import { characters } from "@/lib/characters";
 import CharacterCard from "./CharacterCard";
 
 interface Character {
   id: string;
   name: string;
   personality: string;
-  bio: string;
   previewMessage: string;
-  imageUrl: string;
+  avatar: string;
 }
-
-const characters = [
-  {
-    id: "1",
-    name: "Sakura",
-    personality: "Cheerful & Energetic",
-    bio: "A bright and optimistic character who loves to help others and believes in the power of friendship.",
-    previewMessage: "Hi there! I&quot;m excited to chat with you! ✨",
-    imageUrl:
-      "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800&auto=format&fit=crop",
-  },
-  {
-    id: "2",
-    name: "Yuki",
-    personality: "Cool & Mysterious",
-    bio: "A calm and collected individual with a hidden depth of knowledge.",
-    previewMessage: "*adjusts glasses* Interesting...",
-    imageUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=yuki",
-  },
-];
 
 interface Props {
   onSelectCharacter: (character: Character) => void;
@@ -43,7 +23,11 @@ export default function CharacterGrid({
       {characters.map((character) => (
         <CharacterCard
           key={character.id}
-          {...character}
+          name={character.name}
+          personality={character.personality}
+          bio=""
+          previewMessage={character.previewMessage}
+          imageUrl={character.avatar}
           isSelected={selectedCharacterId === character.id}
           onSelect={() => onSelectCharacter(character)}
         />

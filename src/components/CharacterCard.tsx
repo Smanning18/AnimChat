@@ -16,7 +16,7 @@ export default function CharacterCard({
   personality = "Cheerful & Energetic",
   bio = "A bright and optimistic character who loves to help others and believes in the power of friendship.",
   previewMessage = "Hi there! I&quot;m excited to chat with you! ✨",
-  imageUrl = "https://api.dicebear.com/7.x/avataaars/svg?seed=anime1",
+  imageUrl = "https://api.dicebear.com/7.x/avataaars/svg?seed=aiko",
   isSelected = false,
   onSelect = () => {},
 }: Props) {

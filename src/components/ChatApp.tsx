@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -25,11 +26,25 @@ interface Message {
   characterAvatar?: string;
 }
 
-const STORAGE_KEY = "chat_state";
+function getStorageKey(characterId?: string) {
+  const token = localStorage.getItem("token");
+  const userId = token ? token.split("-")[1] : "anonymous";
+  return `chat_state_${userId}_${characterId}`;
+}
 
-export default function ChatApp() {
+interface Props {
+  onBack?: () => void;
+  initialCharacter?: Character | null;
+  onSelectCharacter?: (character: Character | null) => void;
+}
+
+export default function ChatApp({
+  onBack,
+  initialCharacter,
+  onSelectCharacter,
+}: Props) {
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(
-    null,
+    initialCharacter || null,
   );
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -38,25 +53,27 @@ export default function ChatApp() {
 
   // Load saved state
   useEffect(() => {
-    const savedState = localStorage.getItem(STORAGE_KEY);
-    if (savedState) {
-      try {
-        const { character, chatMessages } = JSON.parse(savedState);
-        setSelectedCharacter(character);
-        setMessages(chatMessages);
-      } catch (e) {
-        console.error("Failed to load saved chat state:", e);
+    if (selectedCharacter) {
+      const savedState = localStorage.getItem(
+        getStorageKey(selectedCharacter.id),
+      );
+      if (savedState) {
+        try {
+          const { chatMessages } = JSON.parse(savedState);
+          setMessages(chatMessages);
+        } catch (e) {
+          console.error("Failed to load saved chat state:", e);
+        }
       }
     }
-  }, []);
+  }, [selectedCharacter]);
 
   // Save state on changes
   useEffect(() => {
-    if (selectedCharacter || messages.length > 0) {
+    if (selectedCharacter && messages.length > 0) {
       localStorage.setItem(
-        STORAGE_KEY,
+        getStorageKey(selectedCharacter.id),
         JSON.stringify({
-          character: selectedCharacter,
           chatMessages: messages,
         }),
       );
@@ -65,6 +82,20 @@ export default function ChatApp() {
 
   const handleCharacterSelect = (character: Character) => {
     setSelectedCharacter(character);
+
+    // Load existing messages or start fresh
+    const savedState = localStorage.getItem(getStorageKey(character.id));
+    if (savedState) {
+      try {
+        const { chatMessages } = JSON.parse(savedState);
+        setMessages(chatMessages);
+        return;
+      } catch (e) {
+        console.error("Failed to load saved chat state:", e);
+      }
+    }
+
+    // If no saved messages, start with welcome message
     setMessages([
       {
         id: "welcome",
@@ -139,6 +170,18 @@ export default function ChatApp() {
       ) : (
         <div className="flex-1 flex flex-col min-h-0">
           <div className="bg-muted px-4 py-2 flex items-center justify-between border-b">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSelectedCharacter(null);
+                onBack?.();
+              }}
+              className="mr-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Button>
             <div className="flex items-center gap-2">
               <img
                 src={selectedCharacter.avatar}
