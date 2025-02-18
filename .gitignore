@@ -1,3 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+dist-ssr/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Tempo specific
+**/tempobook/dynamic/
+**/tempobook/storyboards/
+
 # Logs
 logs
 *.log
@@ -7,25 +34,11 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Local files
 *.local
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# Core
+core/
 
-!node_modules/.vite
-
-**/tempobook/dynamic/
-**/tempobook/storyboards/
-
-core
+# Next.js
+.next/

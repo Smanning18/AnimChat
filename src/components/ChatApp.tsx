@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
+
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -39,19 +40,20 @@ interface Props {
 }
 
 export default function ChatApp({
-  onBack,
-  initialCharacter,
-  onSelectCharacter,
-}: Props) {
+  onBack = () => (window.location.href = "/"),
+  initialCharacter = null,
+  onSelectCharacter = () => {},
+}: Props = {}) {
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(
     initialCharacter || null,
   );
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Load saved state
+  // Load saved state from localStorage
   useEffect(() => {
     if (selectedCharacter) {
       const savedState = localStorage.getItem(
@@ -112,6 +114,10 @@ export default function ChatApp({
   const handleSendMessage = async (content: string) => {
     if (!selectedCharacter) return;
 
+    // Auth disabled for now
+    const userId = "anonymous";
+
+    // Add message to UI immediately
     const userMessage: Message = {
       id: Date.now().toString(),
       content,
@@ -119,11 +125,15 @@ export default function ChatApp({
       timestamp: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, userMessage]);
-    setError(null);
-    setIsLoading(true);
 
     try {
-      const data = await sendChatMessage(content, selectedCharacter.id);
+      setIsLoading(true);
+      setError(null);
+      const data = await sendChatMessage(
+        content,
+        selectedCharacter.id,
+        setIsTyping,
+      );
 
       const aiMessage: Message = {
         id: Date.now().toString(),
@@ -135,6 +145,7 @@ export default function ChatApp({
       };
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
+      console.error("Chat error:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Failed to send message";
       setError(errorMessage);
@@ -143,8 +154,11 @@ export default function ChatApp({
         title: "Error",
         description: errorMessage,
       });
+      // Remove the user's message if we couldn't get a response
+      setMessages((prev) => prev.slice(0, -1));
     } finally {
       setIsLoading(false);
+      setIsTyping(false);
     }
   };
 
@@ -169,41 +183,59 @@ export default function ChatApp({
         </div>
       ) : (
         <div className="flex-1 flex flex-col min-h-0">
-          <div className="bg-muted px-4 py-2 flex items-center justify-between border-b">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setSelectedCharacter(null);
-                onBack?.();
-              }}
-              className="mr-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Button>
-            <div className="flex items-center gap-2">
-              <img
-                src={selectedCharacter.avatar}
-                alt={selectedCharacter.name}
-                className="w-8 h-8 rounded-full"
-              />
-              <div>
-                <h3 className="font-medium">{selectedCharacter.name}</h3>
-                <p className="text-xs text-muted-foreground">
-                  {selectedCharacter.personality}
-                </p>
+          <header className="bg-gradient-to-b from-black/50 to-black/30 backdrop-blur-xl border-b border-white/10 shadow-lg">
+            <div className="h-16 px-4 flex items-center gap-4 relative before:absolute before:inset-0 before:bg-gradient-to-r before:from-purple-500/5 before:via-pink-500/5 before:to-purple-500/5">
+              {/* Back Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setSelectedCharacter(null);
+                  onBack?.();
+                }}
+                className="hover:bg-white/5 transition-colors"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+
+              {/* Divider */}
+              <div className="h-6 w-px bg-gradient-to-b from-white/10 to-white/5" />
+
+              {/* Character Info */}
+              <div className="flex items-center gap-3 flex-1">
+                {/* Avatar with subtle glow */}
+                <div className="relative transform transition-transform duration-300 hover:scale-105">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-md animate-pulse" />
+                  <img
+                    src={selectedCharacter.avatar}
+                    alt={selectedCharacter.name}
+                    className="relative w-9 h-9 rounded-full border border-white/20 object-cover ring-2 ring-white/10"
+                  />
+                </div>
+
+                {/* Name and Status */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium truncate">
+                      {selectedCharacter.name.split(":")[0]}
+                    </h3>
+                    {isLoading && (
+                      <Loader2 className="w-3 h-3 animate-spin text-white/40 flex-shrink-0" />
+                    )}
+                  </div>
+                  <p className="text-sm text-white/50 truncate">
+                    {selectedCharacter.personality}
+                  </p>
+                </div>
               </div>
             </div>
-            {isLoading && (
-              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-            )}
-          </div>
+          </header>
 
           <ChatWindow
             messages={messages}
             characterName={selectedCharacter.name}
             characterAvatar={selectedCharacter.avatar}
+            isTyping={isTyping}
           />
 
           {error && (

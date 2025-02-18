@@ -12,7 +12,10 @@ if (process.env.TEMPO === "true") {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: process.env.NODE_ENV === "development" ? "/" : process.env.VITE_BASE_PATH || "/",
+  base:
+    process.env.NODE_ENV === "development"
+      ? "/"
+      : process.env.VITE_BASE_PATH || "/",
   optimizeDeps: {
     entries: ["src/main.tsx", "src/tempobook/**/*"],
   },
@@ -28,8 +31,17 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  assetsInclude: ["**/*.png"],
+  build: {
+    assetsDir: "assets",
+    rollupOptions: {
+      output: {
+        assetFileNames: "assets/[name]-[hash][extname]",
+      },
+    },
+  },
   server: {
     // @ts-ignore
     allowedHosts: true,
-  }
+  },
 });
